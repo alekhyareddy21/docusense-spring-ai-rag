@@ -1,0 +1,63 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: docusense-ai
+
+  # Database configuration (H2 In-Memory for zero-setup execution)
+  datasource:
+    url: jdbc:h2:mem:docusensedb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+
+  # Hibernate & Spring Data JPA configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Web H2 Console for exploring Hibernate tables directly in the browser
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+
+  # Multipart File Upload limits
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 30MB
+
+  # Spring AI Configuration (Disabled auto-connect if no key is supplied)
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      # To use free Google Gemini API via OpenAI-compatible endpoint, configure:
+      # base-url: https://generativelanguage.googleapis.com/v1beta/openai/
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.3
+
+# PostgreSQL + PGVector Profile (for production or resume showcase)
+---
+spring:
+  config:
+    activate:
+      on-profile: postgres
+  datasource:
+    url: jdbc:postgresql://localhost:5432/docusense
+    username: postgres
+    password: postgrespassword
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update

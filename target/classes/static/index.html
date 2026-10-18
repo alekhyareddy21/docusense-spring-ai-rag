@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuSense AI — Enterprise Document Intelligence</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">⚡</div>
+                <div class="brand-text">
+                    <h2>DocuSense AI</h2>
+                    <span class="badge-tag">Java 21 + Spring AI</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="chat">
+                    <span class="nav-icon">💬</span>
+                    <span>Document Q&A</span>
+                </button>
+                <button class="nav-item" data-tab="documents">
+                    <span class="nav-icon">📄</span>
+                    <span>Documents & Chunks</span>
+                    <span class="count-pill" id="docCountPill">0</span>
+                </button>
+                <button class="nav-item" data-tab="database">
+                    <span class="nav-icon">🗄️</span>
+                    <span>Hibernate Inspector</span>
+                </button>
+                <button class="nav-item" data-tab="settings">
+                    <span class="nav-icon">⚙️</span>
+                    <span>AI Settings</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="tech-stack-card">
+                    <div class="tech-title">Backend Architecture</div>
+                    <div class="tech-pills">
+                        <span>Spring Boot 3</span>
+                        <span>Hibernate JPA</span>
+                        <span>Spring AI</span>
+                        <span>Vector Store</span>
+                    </div>
+                </div>
+                <div class="system-status">
+                    <span class="status-dot"></span>
+                    <span id="backendStatusText">Backend Online</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="top-header">
+                <div>
+                    <h1 id="pageTitle">Document Intelligence & Semantic Q&A</h1>
+                    <p class="subtitle" id="pageSubtitle">Ask natural language questions across your enterprise documents using RAG architecture.</p>
+                </div>
+                <div class="header-actions">
+                    <a href="/h2-console" target="_blank" class="btn btn-secondary">
+                        <span>🗄️</span> H2 Database Console
+                    </a>
+                </div>
+            </header>
+
+            <!-- TAB 1: CHAT / RAG Q&A -->
+            <section id="tab-chat" class="tab-pane active">
+                <div class="chat-container">
+                    <div class="chat-controls-bar">
+                        <div class="control-group">
+                            <label for="documentFilterSelect">Filter by Document:</label>
+                            <select id="documentFilterSelect">
+                                <option value="">All Indexed Documents (Global Search)</option>
+                            </select>
+                        </div>
+                        <div class="quick-chips">
+                            <span class="chip" onclick="askQuickQuestion('What is the PTO and vacation leave policy?')">🏖️ PTO Policy</span>
+                            <span class="chip" onclick="askQuickQuestion('What are the rules for sick leave and medical certificates?')">🩺 Sick Leave</span>
+                            <span class="chip" onclick="askQuickQuestion('Can employees work remotely? What is the hybrid schedule?')">💻 Remote Work</span>
+                            <span class="chip" onclick="askQuickQuestion('What is the wellness allowance amount?')">🏋️ Wellness Allowance</span>
+                        </div>
+                    </div>
+
+                    <div class="messages-scroll" id="messagesContainer">
+                        <div class="message assistant">
+                            <div class="avatar">🤖</div>
+                            <div class="bubble">
+                                <div class="sender-name">DocuSense AI (Assistant)</div>
+                                <div class="text">
+                                    Hello! I am your <strong>DocuSense AI Assistant</strong> powered by <strong>Spring AI</strong> and <strong>Hibernate JPA</strong>.<br><br>
+                                    I have already indexed the sample <em>Acme Corporation Policy</em> document. You can ask me questions about it or upload your own PDF/text documents in the <strong>Documents</strong> tab!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="chat-input-area">
+                        <form id="chatForm" onsubmit="handleSendQuestion(event)">
+                            <textarea id="questionInput" placeholder="Ask a question about your indexed documents (e.g., 'What is the resignation notice period?')..." rows="2" required></textarea>
+                            <button type="submit" id="sendBtn" class="btn btn-primary">
+                                <span>Send Question</span>
+                                <span class="send-arrow">➔</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: DOCUMENT MANAGEMENT -->
+            <section id="tab-documents" class="tab-pane">
+                <div class="doc-management-grid">
+                    <!-- Upload Box -->
+                    <div class="card upload-card">
+                        <h3>Upload New Document</h3>
+                        <p>Upload any PDF or text file. It will be parsed with Apache PDFBox, chunked, and indexed in the Vector Store.</p>
+                        
+                        <div class="drop-zone" id="dropZone">
+                            <input type="file" id="fileInput" accept=".pdf,.txt,.md" style="display: none;" onchange="handleFileSelected(event)">
+                            <div class="drop-icon">📁</div>
+                            <div class="drop-text">Click or drag & drop a PDF or TXT file here</div>
+                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">Select File</button>
+                            <div id="selectedFileName" class="selected-file-label"></div>
+                        </div>
+
+                        <button id="uploadBtn" class="btn btn-primary btn-block" style="margin-top: 16px; display: none;" onclick="uploadDocument()">
+                            ⚡ Process & Index Vector Embeddings
+                        </button>
+                        <div id="uploadProgress" class="progress-bar-container" style="display: none;">
+                            <div class="progress-bar-fill"></div>
+                            <span class="progress-text">Processing document chunks and embeddings...</span>
+                        </div>
+                    </div>
+
+                    <!-- Document Table -->
+                    <div class="card table-card">
+                        <div class="card-header-flex">
+                            <h3>Indexed Documents</h3>
+                            <button class="btn btn-sm btn-secondary" onclick="loadDocuments()">↻ Refresh</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>File Name</th>
+                                        <th>Size</th>
+                                        <th>Status</th>
+                                        <th>Chunks</th>
+                                        <th>Uploaded</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="documentTableBody">
+                                    <tr><td colspan="7" class="text-center">Loading documents...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: HIBERNATE & DATABASE INSPECTOR -->
+            <section id="tab-database" class="tab-pane">
+                <div class="db-inspector-container">
+                    <div class="card">
+                        <div class="card-header-flex">
+                            <div>
+                                <h3>Live Hibernate / JPA Entity Inspector</h3>
+                                <p>Shows entities actively persisted in the database via Spring Data JPA.</p>
+                            </div>
+                            <button class="btn btn-sm btn-secondary" onclick="loadDbInspection()">↻ Query DB</button>
+                        </div>
+
+                        <div class="db-stats-row">
+                            <div class="stat-box">
+                                <span class="stat-number" id="statUsers">0</span>
+                                <span class="stat-label">Users (JPA)</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-number" id="statDocs">0</span>
+                                <span class="stat-label">Documents (JPA)</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-number" id="statChunks">0</span>
+                                <span class="stat-label">Vector Chunks</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-number" id="statMessages">0</span>
+                                <span class="stat-label">Messages (JPA)</span>
+                            </div>
+                        </div>
+
+                        <h4 style="margin-top: 24px;">Recent Persisted Chat Messages (Table: <code>chat_messages</code>)</h4>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Role</th>
+                                        <th>Content Preview</th>
+                                        <th>Created At</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="messagesTableBody">
+                                    <tr><td colspan="4" class="text-center">Loading messages...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: SETTINGS -->
+            <section id="tab-settings" class="tab-pane">
+                <div class="card settings-card">
+                    <h3>AI & LLM Configuration</h3>
+                    <p>DocuSense AI is built with Spring AI and can use Google Gemini (free API), OpenAI, Groq, or local Ollama.</p>
+
+                    <div class="form-group">
+                        <label>Google Gemini API (Recommended & Free):</label>
+                        <p class="form-help">Get a free key from <a href="https://aistudio.google.com/" target="_blank">Google AI Studio</a>. Set it in <code>application.yml</code> or environment variable <code>OPENAI_API_KEY</code>.</p>
+                    </div>
+
+                    <div class="info-alert">
+                        <strong>💡 Interview Tip:</strong>
+                        When presenting this project, highlight that you integrated:
+                        <ul>
+                            <li><strong>Spring AI</strong> with Vector Store (Embedding Model + SimpleVectorStore / PGVector)</li>
+                            <li><strong>Apache PDFBox</strong> for multi-page document parsing and text chunking</li>
+                            <li><strong>Hibernate (Spring Data JPA)</strong> for relational mapping of users, document metadata, and chat history</li>
+                            <li><strong>Server-Sent Events (SSE)</strong> for real-time streaming tokens</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
